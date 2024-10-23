@@ -1,11 +1,16 @@
 import smtplib
 from email.mime.text import MIMEText
 
+password_path = "confidential/pass.txt"
+# Open and read the file
+with open(password_path, 'r') as file:
+    passkey = file.read()  # Read the entire content of the file
+print(passkey)
 
 smtp_server = "smtp.gmail.com"
 smtp_port = 587
 username = "nehayjoshi98@gmail.com"
-password = "yehy nomz jmwu ugxb"
+password = f"{passkey}"
 from_addr = "nehayjoshi98@gmail.com"
 to_addr = "vedantjoshi370@gmail.com"
 subject = "Test Email"

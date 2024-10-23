@@ -2,6 +2,11 @@ import os, re, json, time
 from pydantic import BaseModel, Field
 import openai
 
+password_path = "confidential/pass.txt"
+# Open and read the file
+with open(password_path, 'r') as file:
+    passkey = file.read()  # Read the entire content of the file
+
 client = openai.Client(
     base_url="http://127.0.0.1:11434/v1", api_key="EMPTY")
 
@@ -23,6 +28,7 @@ EMAIL_DB="""
 NAME		EMAIL
 Vedant Joshi: vedantjoshi370@gmail.com
 Neha Joshi: nehayj100@gmail.com
+Vasudha Devarakonda : dvasudha1234@gmail.com
 """
 
 def find_email(query: str) -> str:
@@ -38,7 +44,7 @@ def send_email_internal(to_addr: str, subject: str, body: str) -> str:
     smtp_server = "smtp.gmail.com"  # This might need to be updated
     smtp_port = 587  # or 465 for SSL or 587
     username = "nehayjoshi98@gmail.com"
-    password = "xx"
+    password = f"{passkey}"
     from_addr = "nehayjoshi98@gmail.com"
 
     cc_addr = "xxx"
