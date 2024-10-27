@@ -2,7 +2,7 @@ import os, re, json, time
 from pydantic import BaseModel, Field
 import openai
 
-password_path = "confidential/pass.txt"
+password_path = "confidential/email_pass.txt"
 # Open and read the file
 with open(password_path, 'r') as file:
     passkey = file.read()  # Read the entire content of the file
