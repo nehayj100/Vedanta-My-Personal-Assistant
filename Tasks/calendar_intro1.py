@@ -7,12 +7,28 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# keys for calendar
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 
+# print(start_date_time)
+
+
 def main():
+  # variables for meeting details
+  summary = 'Data Science Discusion'
+  location = 'Zoom'
+  description = 'Meeting for basic DS concepts dicsussion'
+  start_date = '2024-10-30'
+  start_time = '09:00:00-07:00'
+  start_date_time = start_date+'T'+start_time
+  end_date = '2024-10-30'
+  end_time = '10:00:00-07:00'
+  end_date_time = end_date+'T'+end_time
+  time_zone = 'America/Los_Angeles'
+  attendee_email = 'nehayj100@gmail.com'
   """Shows basic usage of the Google Calendar API.
   Prints the start and name of the next 10 events on the user's calendar.
   """
@@ -65,24 +81,25 @@ def main():
 
   except HttpError as error:
     print(f"An error occurred: {error}")
+
   event = {
-    'summary': 'Google I/O 2015',
-    'location': '800 Howard St., San Francisco, CA 94103',
-    'description': 'A chance to hear more about Google\'s developer products.',
+    'summary': summary,
+    'location': location,
+    'description': description,
     'start': {
-        'dateTime': '2024-10-30T09:00:00-07:00',
-        'timeZone': 'America/Los_Angeles',
+        'dateTime': start_date_time,
+        'timeZone': time_zone,
     },
     'end': {
-        'dateTime': '2024-10-30T17:00:00-07:00',
-        'timeZone': 'America/Los_Angeles',
+        'dateTime': end_date_time,
+        'timeZone': time_zone,
     },
     'recurrence': [
         'RRULE:FREQ=DAILY;COUNT=1'
     ],
     'attendees': [
-        {'email': 'lpage@example.com'},
-        {'email': 'sbrin@example.com'},
+        {'email': attendee_email},
+        
     ],
     'reminders': {
         'useDefault': False,

@@ -67,7 +67,7 @@ def split_text(documents: list[Document]):
 
     return chunks  # Return the list of split text chunks
 
-client = chromadb.PersistentClient(
+rag_client = chromadb.PersistentClient(
     path="chromadb",
     settings=Settings(),
     tenant=DEFAULT_TENANT,
@@ -81,12 +81,12 @@ collection_name = "docs"
 # Try to load the collection; if it doesn't exist, create it
 try:
     # Attempt to get the collection by name
-    collection = client.get_collection(name=collection_name)
+    collection = rag_client.get_collection(name=collection_name)
     print(f"Collection '{collection_name}' loaded successfully.")
 except Exception as e:
     # If collection doesn't exist, create it
     print(f"Collection '{collection_name}' not found. Creating a new one.")
-    collection = client.create_collection(name=collection_name)
+    collection = rag_client.create_collection(name=collection_name)
 
     documents = load_documents()  # Load documents from a source
     chunks = split_text(documents)  # Split documents into manageable chunks

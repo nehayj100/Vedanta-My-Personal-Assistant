@@ -7,13 +7,16 @@ password_path = "../confidential/email_pass.txt"
 with open(password_path, 'r') as file:
     passkey = file.read()  # Read the entire content of the file 
 
-client = openai.Client(
+
+
+
+ollama_client = openai.Client(
     base_url="http://127.0.0.1:11434/v1", api_key="EMPTY")
 
 stop = ['Observation:', 'Observation ']
 def invoke_llm(prompt:str) -> str:
     try:
-        response = client.completions.create(
+        response = ollama_client.completions.create(
             model="llama3.1",
             prompt=prompt,
             stop=stop,
@@ -28,7 +31,6 @@ EMAIL_DB="""
 NAME		EMAIL
 Vedant Joshi: vedantjoshi370@gmail.com
 Neha Joshi: nehayj100@gmail.com
-Vasudha Devarakonda : dvasudha1234@gmail.com
 """
 
 def find_email(query: str) -> str:
@@ -94,6 +96,8 @@ def send_email(llm_json_str: str) -> str:
         output = f"Email sending was not approved. Reason for disapproval: {approval}"
 
     return output
+
+########################################################################################################################################################
 
 from string import Template
 tao_template=Template("""

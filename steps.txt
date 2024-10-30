@@ -4,3 +4,9 @@
     1.3 handle meeting conflicts and schedules using the prompth
 2. deploy on streamlit
 3. check speed and evaluate
+
+
+Steps remaining:
+1. include all tasks to prompt
+2. ask questions task!!!!
+3. streamlit !!

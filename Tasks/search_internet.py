@@ -16,10 +16,10 @@ with open(search_cx_path, 'r') as file:
 query = 'Where is Texas A&M'
 
 # Construct the request URL
-url = f'https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={CX}&q={query}'
+google_search_url = f'https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={CX}&q={query}'
 
 # Make the request
-response = requests.get(url)
+response = requests.get(google_search_url)
 
 # Check for a successful response
 if response.status_code == 200:
