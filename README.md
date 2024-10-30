@@ -48,7 +48,7 @@ To ensure the security of your private information, the Personal AI Assistant ru
 3. **Run the Application**:
    - Start the assistant:  
      ```bash
-     python main.py
+     python pipeline.py
      ```
 
 ## Future Enhancements
