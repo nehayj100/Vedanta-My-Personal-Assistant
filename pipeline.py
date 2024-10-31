@@ -1,10 +1,3 @@
-# option 1 : instead of having everything in one single file- we can have one base file and direct to the respective
-# fully working files as per the task
-
-# option2: bring all functions together in one file and single prompt : CHOOSE this
-    # differnet regex for each action and then guide to respective function as done in email assistant.
-    # add all these tasks into the promt of email_assistant. 
-
 # Tasks:
     # 1. Send emails
     # 2. Schedule meetings + if meeting time in events - ask for new time (repeat till no conflict)
@@ -85,7 +78,7 @@ def invoke_llm(prompt:str) -> str:
 
 EMAIL_DB="""
 NAME		EMAIL
-Vedant Joshi: vedantjoshi370@gmail.com
+VY Joshi: vedantjoshi370@gmail.com
 Neha Joshi: nehayj100@gmail.com
 """
 
@@ -153,14 +146,15 @@ def send_email(llm_json_str: str) -> str:
     return output
 
 ## defining functions for all tasks
-def search_google(query):
+def search_the_internet(query):
     # print(query)
     # Construct the request URL
     google_search_url = f'https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={CX}&q={query}'
 
     # Make the request
     response = requests.get(google_search_url)
-
+    flag = 0
+    output = ""
     # Check for a successful response
     if response.status_code == 200:
         results = response.json()
@@ -168,8 +162,13 @@ def search_google(query):
             print(f"Title: {item['title']}")
             print(f"Link: {item['link']}")
             print(f"Snippet: {item['snippet']}\n")
+        flag = 1
     else:
         print(f"Error: {response.status_code} - {response.text}")
+        output = "Did not fetch"
+    if flag == 1:
+        output = "Search results fetched successfully"
+    return output
 
 def load_documents():
     document_loader = PyPDFDirectoryLoader(DATA_PATH)  # Initialize PDF loader with specified directory
@@ -196,22 +195,6 @@ def split_text(documents: list[Document]):
     return chunks  # Return the list of split text chunks
 
 def perform_RAG(prompt):
-    # client = chromadb.PersistentClient(
-    #     path="chromadb",
-    #     settings=Settings(),
-    #     tenant=DEFAULT_TENANT,
-    #     database=DEFAULT_DATABASE,
-    # )
-
-    # # Get all collections and delete them
-    # collections = client.list_collections()
-
-    # for collection in collections:
-    #     client.delete_collection(name=collection.name)  # Deleting the collection by name
-
-    # print("All collections have been cleared.")
-########################################################################################################################
-
     rag_client = chromadb.PersistentClient(
         path="chromadb",
         settings=Settings(),
@@ -259,7 +242,7 @@ def perform_RAG(prompt):
     prompt=prompt,
     model="llama3.1"
     )["embedding"]
-    print(f"embedding: length {len(embedding)})\n{embedding}")
+    # print(f"embedding: length {len(embedding)})\n{embedding}")
 
     results = collection.query(
     query_embeddings=[embedding],
@@ -291,6 +274,9 @@ def perform_RAG(prompt):
 
     print(f"response:\n{output['response']}")
 
+    output = "Answer fetched successfully"
+    return output
+
 def clear_db():
     client = chromadb.PersistentClient(
         path="chromadb",
@@ -307,20 +293,48 @@ def clear_db():
 
     print("All collections have been cleared.")
 
-def create_meeting(
+def extract_meeting_details(query: str) -> str:
+    s = f"""The following are details for the meeting: {query}. 
+    Extract and return these meeting details: 
+    summary, description, start_date, start_time, attendee_email.
+    After extraction, convert date format to 'yyyy-mm-dd' and convert time format to '09:00:00-07:00'.
+    ONLY If information for any of above variables is not available in {query}, 
+    set the following defaults values:
     summary = 'Meeting for discussion',
-    location = 'Zoom',
     description = 'Meeting',
     start_date = datetime.today().strftime('%Y-%m-%d'),
-    start_time = '09:00:00-07:00',
-    end_date = datetime.today().strftime('%Y-%m-%d'),
-    end_time = '10:00:00-07:00',
-    time_zone = 'America/Los_Angeles',
-    attendee_email = 'nehayj100@gmail.com'
-):
-    start_date_time = start_date + 'T' + start_time
-    end_date_time = end_date + 'T' +end_time
+    start_time = datetime.now().strftime('%H:%M:%S'),
+    attendee_email = 'nehayjoshi98@gmail.com'
+    """
+    return invoke_llm(s)
 
+def schedule_meeting(llm_json_str: str) -> str:
+    try:
+        patch_json_content = json.loads(llm_json_str)
+        start_date = patch_json_content["start_date"]
+        start_time = patch_json_content["start_time"]
+        attendee = patch_json_content["attendee_email"]
+        summary = patch_json_content["summary"]
+        description = patch_json_content["desciprion"]
+        start_date_time = start_date + 'T' + start_time
+        time_zone = 'America/Los_Angeles'
+        location = 'Zoom'
+        end_date = start_date
+        end_time = start_time + '01:00:00-07:00'
+        end_date_time = end_date+'T'+end_time
+        print(f"Scheduling meeting with {attendee} at {start_date_time} for 1 hour\n")
+        approval = input("Is the above meeting good to go? (yes/no): ")
+        if approval.lower() == 'yes' or approval.lower() == 'y':
+            output = schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location)
+            # output = "email sent successfully"
+        else:
+            output = f"Meeting scheduling sending was not approved. Reason for disapproval: {approval}"
+
+        return output
+    except Exception as e:
+        error_str = f"Exception: {e}"
+
+def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -369,7 +383,7 @@ def create_meeting(
             print(start, event["summary"])
 
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        print(f"An error occurred: {error}")   
 
     event = {
         'summary': summary,
@@ -387,7 +401,7 @@ def create_meeting(
             'RRULE:FREQ=DAILY;COUNT=1'
         ],
         'attendees': [
-            {'email': attendee_email},
+            {'email': attendee},
             
         ],
         'reminders': {
@@ -402,20 +416,28 @@ def create_meeting(
     event = service.events().insert(calendarId='primary', body=event).execute()
     print('Event created: %s' % (event.get('htmlLink')))
 
+    output = "Meeting scheduled successfully"
+    return output
 
 def main():
     tao_template=Template("""
-    My name is Neha Joshi. You are my email assistant, Vedanta. You have access to the following tools:
+    My name is Neha Joshi. You are my Personal Assistant, Vedanta. You have access to the following tools:
                     
         FindEmail: "Find the email addresses of my contacts. Input is the contact info such as names."
         SendEmail: "Send email tool. Input is a json object with {"to_addr: str, "subject": str, "body": str"}."
+        SearchInternet: "Search the internet tool. Input is a query which the user wants to search on the internet."
+        AnswerUsingPdf: "Answer using pdf tool. Input is a query which needs to be answered using perform_RAG"
+        ExtractMeetingDetails: "Find the meeting details. Input is meeting details such as Meeting summary, date, time"
+        ScheduleMeeting: "Schedule a meeting tool. Input is a json object with {"summary: str, "description": str, "start_date": str", "start_time": str", "attendee_email": str"}."
 
     To craft an email, you should use FindEmail to find correct email addresses (to_addr) of my contacts.
-
+    To search on the internet you should use search_the_internet. Do not send emails if action is search the internet.
+    To answer using pdf you should use perform_RAG. Do not send emails or search internet if action is asnwer using pdf.
+    To schedule a meeting you should first use ExtractMeetingDetails to get summary, description, start_date, start_time, attendee_email for this meeting.
     Use the following format:
         
         Thought: you should always think about what to do
-        Action: the action to take, should be one of [FindEmail, SendEmail]
+        Action: the action to take, should be one of [FindEmail, SendEmail, SearchInternet, AnswerUsingPdf, ScheduleMeeting]
         Action Input: the input to the action
         Observation: the result of the action
         ... (this Thought/Action/Action Input/Observation can repeat N times)
@@ -449,6 +471,7 @@ def main():
                 action = action_match.group(1).strip()
                 action_input = action_match.group(2)
                 tool_input = action_input.strip("\n")
+                
                 if llm_output.startswith("Thought:"):
                     prompt = prompt+llm_output[8:]
                 else:
@@ -462,6 +485,20 @@ def main():
                         return
                 elif action=="FindEmail":
                     tool_output = find_email(tool_input)
+                elif action=="SearchInternet":
+                    tool_output = search_the_internet(tool_input)
+                    if tool_output == "Search results fetched successfully":
+                        return
+                elif action=="AnswerUsingPdf":
+                    tool_output = perform_RAG(tool_input)
+                    if tool_output == "Answer fetched successfully":
+                        return
+                elif action == "GetMeetingDetails":
+                    tool_output = extract_meeting_details(tool_input)
+                elif action=="ScheduleMeeting":
+                    tool_output = schedule_meeting(tool_input)
+                    if tool_output == "Meeting scheduled successfully":
+                        return
                 else:
                     tool_output = "Error: Action "+f"'{action}' is not a valid!"
 
@@ -475,7 +512,7 @@ def main():
 
             prompt = prompt+"\nObservation: "+str(tool_output)+"\n"
 
-    print(f"I'm your email assistant, Vedanta.")
+    print(f"Namaskaar! I'm your Personal Assistant, Vedanta.")
     while True:
         try:
             user_input = input("Please enter a new task: ")
@@ -487,5 +524,5 @@ def main():
                 print("\nExiting.\n")
                 break
         
-
-main()
+if __name__ == "__main__":
+  main()

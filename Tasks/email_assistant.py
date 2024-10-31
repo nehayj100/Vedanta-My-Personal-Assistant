@@ -7,9 +7,6 @@ password_path = "../confidential/email_pass.txt"
 with open(password_path, 'r') as file:
     passkey = file.read()  # Read the entire content of the file 
 
-
-
-
 ollama_client = openai.Client(
     base_url="http://127.0.0.1:11434/v1", api_key="EMPTY")
 
