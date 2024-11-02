@@ -1,6 +1,16 @@
-1. make UI
-2. video
-3. report: write latency and stuff
+1. Search internet- give an answer : DONE
+2. in email: ask subject and body? DONE
+    subject body
+    email directory in confidential
+3. Schedule meeting: one email only: DONE
+4. Ask quetions : add more
+5. make UI
+6. video
+7. report: write latency and stuff
 
-4. format corrections for date and time
-5. using LLM for meeting schedules
+
+8. format corrections for date and time
+9. fully using LLM for meeting schedules
+
+
+email: send an email to abc: subject: team meeting body: we will discuss next steps in the project

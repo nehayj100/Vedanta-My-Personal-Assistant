@@ -57,7 +57,6 @@ search_cx_path = "confidential/search_cx.txt"
 with open(search_api_path, 'r') as file:
     API_KEY = file.read()  # Read the entire content of the file
 
-
 with open(search_cx_path, 'r') as file:
     CX = file.read()  # Read the entire content of the file
 
@@ -76,11 +75,13 @@ def invoke_llm(prompt:str) -> str:
 
     return output
 
-EMAIL_DB="""
-NAME		EMAIL
-VY Joshi: vedantjoshi370@gmail.com
-Neha Joshi: nehayj100@gmail.com
-"""
+email_db_path = "confidential/email_db.txt"
+# Open and read the file for email password
+with open(email_db_path, 'r') as file:
+    email_database = file.read()  # Read the entire content of the file 
+
+EMAIL_DB = email_database
+# print(EMAIL_DB)
 
 def find_email(query: str) -> str:
     s = "The following lists names and email addresses of my contacts:\n"+EMAIL_DB+"\n Please return email of "+query
@@ -166,6 +167,15 @@ def search_the_internet(query):
     else:
         print(f"Error: {response.status_code} - {response.text}")
         output = "Did not fetch"
+    # getting summary of teh first result
+    answer = invoke_llm(f"""Use the following search result: {results} to answer: {query} in detail.
+                            """)
+    
+    print("-----------------------------------------------------------------")
+    print("Search result summary is : ", answer)
+    print("-----------------------------------------------------------------")
+    print(f"""For more inforamtion, visit the link speciied in the search results.""")
+    
     if flag == 1:
         output = "Search results fetched successfully"
     return output
@@ -340,16 +350,10 @@ def extract_meeting_details() -> str:
             heads_up = True
             return final_output
         
-            
-
+        
 def calculate_end_time(start_time_str, minutes_to_add):
-    # Parse the start time
     start_time = datetime.strptime(start_time_str, "%H:%M:%S")
-    
-    # Add the given minutes to the start time
     end_time = start_time + timedelta(minutes=minutes_to_add)
-    
-    # Format the end time back to string
     end_time_str = end_time.strftime("%H:%M:%S")
     return end_time_str
 
@@ -358,9 +362,9 @@ def schedule_meeting(start_date, start_time, minutes_meeting, attendee, summary,
     end_date = start_date
     end_time = calculate_end_time(start_time, int(minutes_meeting))
     end_date_time = end_date+'T'+end_time
-    print("here ")
+    # print("here ")
     output = schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location)
-    print("OUTPUT IS:", output)
+    # print("OUTPUT IS:", output)
     return output
     
 
