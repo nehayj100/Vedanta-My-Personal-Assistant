@@ -241,13 +241,6 @@ def perform_RAG(prompt):
                 embeddings=[embedding],
                 documents=[d]
             )
-
-    # # an example prompt
-    # prompt = "How does chain of thought prompting work?"
-
-    # prompt = "What's the score of llama 3 8B on MATH (0-shot, CoT)?"
-
-    # generate an embedding for the prompt and retrieve the most relevant doc
     embedding = ollama.embeddings(
     prompt=prompt,
     model="llama3.2"
@@ -303,12 +296,6 @@ def clear_db():
 
     print("All collections have been cleared.")
 
-# def convert_date():
-#     pass
-
-# def convert_time():
-#     pass
-
 def extract_meeting_details() -> str:
     heads_up = False
     while not heads_up:
@@ -317,8 +304,14 @@ def extract_meeting_details() -> str:
         attendee = input("Who is invited? give me the attendee's email:    ")
         start_date = input("Tell me Date of the meeting? Format should be yyyy-m-dd:    ")
         # start_date = convert_date(start_date)
-        start_time = input("Tell me when should the meeting start? Format should be 24 hours hh:mm:ss:    ")
         minutes_in_meeting = input("how many minutes should the meeting last?")
+        slot_approval = input("Do you want me to suggest a start time as per your calendar ?")
+        if slot_approval.lower() == 'yes' or approval.lower() == 'y':
+            start_time = get_available_meeting_slots(start_date, minutes_in_meeting)
+            print(f"""Okay, I have {start_time} as the free slot for you.""")
+        else:
+            start_time = input("Tell me when should the meeting start? Format should be 24 hours hh:mm:ss:    ")
+        
         time_zone = 'America/Los_Angeles'
         location = 'Zoom'
         # start_time = convert_time(start_time)
@@ -332,7 +325,7 @@ def extract_meeting_details() -> str:
             time zone = {time_zone}
             location = {location}
             Meeting will be scheduled for {minutes_in_meeting} minutes:  """)
-      
+       
         final_output = ""
 
         if approval.lower() == 'yes' or approval.lower() == 'y':
@@ -341,7 +334,10 @@ def extract_meeting_details() -> str:
             output = f"Meeting scheduling sending was not approved. Reason for disapproval: {approval}"
 
         if output == "Meeting scheduled successfully":
-            final_output = send_email_internal(str(attendee), str(summary), str(description))
+            attendee_name = attendee.split('@')[0]
+            meeting_description =f"""Hi {attendee_name}, I have scheduled am scheduling a meeting 
+             on {start_date} at {start_time} for {minutes_in_meeting}. {description}"""
+            final_output = send_email_internal(str(attendee), str(summary), meeting_description)
             print("email sent to the attendee!")
             final_output = "Email successfully sent!"
         
@@ -367,6 +363,55 @@ def schedule_meeting(start_date, start_time, minutes_meeting, attendee, summary,
     # print("OUTPUT IS:", output)
     return output
     
+def get_available_meeting_slots(meeting_date, minz):
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                calendar_creds, SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+    try:
+        service = build("calendar", "v3", credentials=creds)
+
+        # Call the Calendar API
+        now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+        #print("Getting the upcoming 10 events")
+        events_result = (
+            service.events()
+            .list(
+                calendarId="primary",
+                timeMin=now,
+                maxResults=10,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        events = events_result.get("items", [])
+
+        if not events:
+            print("No upcoming events found.")
+            return
+        
+        # tell the LLM to give us available slots 
+        prompt = f"""Based on the following free time slots:\n{events}\nPlease suggest the best time slot for a meeting of {minz} minutes on {meeting_date}.
+                    Return only one time slot in hh:mm:ss (hh should be between 8 and 18, mm and ss should be 00) format and no other text."""
+
+        slots = invoke_llm(prompt)
+        return slots
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+    
+
 
 def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location):
     creds = None
