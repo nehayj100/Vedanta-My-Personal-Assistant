@@ -22,10 +22,10 @@ def main():
   location = 'Zoom'
   description = 'Meeting for basic DS concepts dicsussion'
   start_date = '2024-10-30'
-  start_time = '09:00:00-07:00'
+  start_time = '09:00:00'
   start_date_time = start_date+'T'+start_time
   end_date = '2024-10-30'
-  end_time = '10:00:00-07:00'
+  end_time = '10:00:00'
   end_date_time = end_date+'T'+end_time
   time_zone = 'America/Los_Angeles'
   attendee_email = 'nehayj100@gmail.com'
@@ -109,10 +109,28 @@ def main():
         ],
     },
     }
-
+  print(event)
   event = service.events().insert(calendarId='primary', body=event).execute()
   print('Event created: %s' % (event.get('htmlLink')))
 
 
 if __name__ == "__main__":
   main()
+
+
+# pt1  {'summary': 'team', 'location': 'Zoom', 
+# 'description': 'team', 'start': {'dateTime': '2024-12-12T10:00:00', 'timeZone': 'America/Los_Angeles'}, 
+# 'end': {'dateTime': '2024-12-12T10:00:0001:00:00-07:00', 'timeZone': 'America/Los_Angeles'}, 
+# 'recurrence': ['RRULE:FREQ=DAILY;COUNT=1'], 'attendees': [{'email': 'nehayj100@gmail.com'}], 
+# 'reminders': {'useDefault': False, 'overrides': [{'method': 'email', 'minutes': 1440}, 
+# {'method': 'popup', 'minutes': 10}]}}
+
+# {'summary': 'Data Science Discusion', 'location': 'Zoom', 
+# 'description': 'Meeting for basic DS concepts dicsussion', 
+# 'start': {'dateTime': '2024-10-30T09:00:00', 'timeZone': 'America/Los_Angeles'}, 
+# 'end': {'dateTime': '2024-10-30T10:00:00', 'timeZone': 
+# 'America/Los_Angeles'}, 
+# 'recurrence': ['RRULE:FREQ=DAILY;COUNT=1'], 
+# 'attendees': [{'email': 'nehayj100@gmail.com'}], 
+# 'reminders': {'useDefault': False, 
+# 'overrides': [{'method': 'email', 'minutes': 1440}, {'method': 'popup', 'minutes': 10}]}}

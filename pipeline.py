@@ -27,7 +27,7 @@ from chromadb.config import DEFAULT_TENANT, DEFAULT_DATABASE, Settings
 import requests
 import os, re, json, time
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 from string import Template
 
 
@@ -66,7 +66,7 @@ calendar_creds = "confidential/credentials.json"
 def invoke_llm(prompt:str) -> str:
     try:
         response = ollama_client.completions.create(
-            model="llama3.1",
+            model="llama3.2",
             prompt=prompt,
             stop=stop,
         )
@@ -223,7 +223,7 @@ def perform_RAG(prompt):
         for i, chunk in enumerate(chunks):
             d = chunk.page_content
             print(f"Chunk {i}: {d}")
-            response = ollama.embeddings(model="llama3.1", prompt=d)
+            response = ollama.embeddings(model="llama3.2", prompt=d)
             embedding = response["embedding"]
             # print(f"embedding: {embedding}")
             collection.add(
@@ -240,7 +240,7 @@ def perform_RAG(prompt):
     # generate an embedding for the prompt and retrieve the most relevant doc
     embedding = ollama.embeddings(
     prompt=prompt,
-    model="llama3.1"
+    model="llama3.2"
     )["embedding"]
     # print(f"embedding: length {len(embedding)})\n{embedding}")
 
@@ -268,7 +268,7 @@ def perform_RAG(prompt):
 
     # generate a response combining the prompt and data we retrieved in step 2
     output = ollama.generate(
-    model="llama3.1",
+    model="llama3.2",
     prompt=prompt
     )
 
@@ -293,46 +293,76 @@ def clear_db():
 
     print("All collections have been cleared.")
 
-def extract_meeting_details(query: str) -> str:
-    s = f"""The following are details for the meeting: {query}. 
-    Extract and return these meeting details: 
-    summary, description, start_date, start_time, attendee_email.
-    After extraction, convert date format to 'yyyy-mm-dd' and convert time format to '09:00:00-07:00'.
-    ONLY If information for any of above variables is not available in {query}, 
-    set the following defaults values:
-    summary = 'Meeting for discussion',
-    description = 'Meeting',
-    start_date = datetime.today().strftime('%Y-%m-%d'),
-    start_time = datetime.now().strftime('%H:%M:%S'),
-    attendee_email = 'nehayjoshi98@gmail.com'
-    """
-    return invoke_llm(s)
+# def convert_date():
+#     pass
 
-def schedule_meeting(llm_json_str: str) -> str:
-    try:
-        patch_json_content = json.loads(llm_json_str)
-        start_date = patch_json_content["start_date"]
-        start_time = patch_json_content["start_time"]
-        attendee = patch_json_content["attendee_email"]
-        summary = patch_json_content["summary"]
-        description = patch_json_content["desciprion"]
-        start_date_time = start_date + 'T' + start_time
+# def convert_time():
+#     pass
+
+def extract_meeting_details() -> str:
+    heads_up = False
+    while not heads_up:
+        summary = input("What is the meeting for?    ")
+        description = input("Describe the meeting agenda:    ")
+        attendee = input("Who is invited? give me the attendee's email:    ")
+        start_date = input("Tell me Date of the meeting? Format should be yyyy-m-dd:    ")
+        # start_date = convert_date(start_date)
+        start_time = input("Tell me when should the meeting start? Format should be 24 hours hh:mm:ss:    ")
+        minutes_in_meeting = input("how many minutes should the meeting last?")
         time_zone = 'America/Los_Angeles'
         location = 'Zoom'
-        end_date = start_date
-        end_time = start_time + '01:00:00-07:00'
-        end_date_time = end_date+'T'+end_time
-        print(f"Scheduling meeting with {attendee} at {start_date_time} for 1 hour\n")
-        approval = input("Is the above meeting good to go? (yes/no): ")
+        # start_time = convert_time(start_time)
+        approval = input(f"""Is the following information correct?
+            summary = {summary}
+            desctiption = {description}
+            attendee = {attendee}
+            start date = {start_date}
+            start time = {start_time}
+            # minutes in meeting: {minutes_in_meeting}
+            time zone = {time_zone}
+            location = {location}
+            Meeting will be scheduled for {minutes_in_meeting} minutes:  """)
+      
+        final_output = ""
+
         if approval.lower() == 'yes' or approval.lower() == 'y':
-            output = schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location)
-            # output = "email sent successfully"
+            output = schedule_meeting(start_date, start_time, minutes_in_meeting, attendee, summary, description, time_zone, location)
         else:
             output = f"Meeting scheduling sending was not approved. Reason for disapproval: {approval}"
 
-        return output
-    except Exception as e:
-        error_str = f"Exception: {e}"
+        if output == "Meeting scheduled successfully":
+            final_output = send_email_internal(str(attendee), str(summary), str(description))
+            print("email sent to the attendee!")
+            final_output = "Email successfully sent!"
+        
+        if final_output == "Email successfully sent!":
+            final_output = "Meeting scheduled successfuly and email sent to the invitees!!"
+            heads_up = True
+            return final_output
+        
+            
+
+def calculate_end_time(start_time_str, minutes_to_add):
+    # Parse the start time
+    start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+    
+    # Add the given minutes to the start time
+    end_time = start_time + timedelta(minutes=minutes_to_add)
+    
+    # Format the end time back to string
+    end_time_str = end_time.strftime("%H:%M:%S")
+    return end_time_str
+
+def schedule_meeting(start_date, start_time, minutes_meeting, attendee, summary, description, time_zone, location):
+    start_date_time = start_date + 'T' + start_time
+    end_date = start_date
+    end_time = calculate_end_time(start_time, int(minutes_meeting))
+    end_date_time = end_date+'T'+end_time
+    print("here ")
+    output = schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location)
+    print("OUTPUT IS:", output)
+    return output
+    
 
 def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary, description, time_zone, location):
     creds = None
@@ -384,6 +414,8 @@ def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary,
 
     except HttpError as error:
         print(f"An error occurred: {error}")   
+    
+    print("creating event!!")
 
     event = {
         'summary': summary,
@@ -412,8 +444,9 @@ def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary,
             ],
         },
         }
-
+    print("pt1 ", event)
     event = service.events().insert(calendarId='primary', body=event).execute()
+    print("pt2 ", event)
     print('Event created: %s' % (event.get('htmlLink')))
 
     output = "Meeting scheduled successfully"
@@ -427,17 +460,17 @@ def main():
         SendEmail: "Send email tool. Input is a json object with {"to_addr: str, "subject": str, "body": str"}."
         SearchInternet: "Search the internet tool. Input is a query which the user wants to search on the internet."
         AnswerUsingPdf: "Answer using pdf tool. Input is a query which needs to be answered using perform_RAG"
-        ExtractMeetingDetails: "Find the meeting details. Input is meeting details such as Meeting summary, date, time"
-        ScheduleMeeting: "Schedule a meeting tool. Input is a json object with {"summary: str, "description": str, "start_date": str", "start_time": str", "attendee_email": str"}."
+        ScheduleMeeting: "Schedule a meeting tool."
 
+    To schedule a meeting you should use ExtractMeetingDetails.
     To craft an email, you should use FindEmail to find correct email addresses (to_addr) of my contacts.
     To search on the internet you should use search_the_internet. Do not send emails if action is search the internet.
     To answer using pdf you should use perform_RAG. Do not send emails or search internet if action is asnwer using pdf.
-    To schedule a meeting you should first use ExtractMeetingDetails to get summary, description, start_date, start_time, attendee_email for this meeting.
+    
     Use the following format:
         
         Thought: you should always think about what to do
-        Action: the action to take, should be one of [FindEmail, SendEmail, SearchInternet, AnswerUsingPdf, ScheduleMeeting]
+        Action: the action to take, should be one of [FindEmail, SendEmail, SearchInternet, AnswerUsingPdf, ExtractMeetingDetails]
         Action Input: the input to the action
         Observation: the result of the action
         ... (this Thought/Action/Action Input/Observation can repeat N times)
@@ -493,21 +526,23 @@ def main():
                     tool_output = perform_RAG(tool_input)
                     if tool_output == "Answer fetched successfully":
                         return
-                elif action == "GetMeetingDetails":
-                    tool_output = extract_meeting_details(tool_input)
-                elif action=="ScheduleMeeting":
-                    tool_output = schedule_meeting(tool_input)
-                    if tool_output == "Meeting scheduled successfully":
+                elif action == "ExtractMeetingDetails":
+                    tool_output = extract_meeting_details()
+                    if tool_output == "Meeting scheduled successfuly and email sent to the invitees!!":
                         return
+                # elif action=="ScheduleMeeting":
+                #     tool_output = schedule_meeting(tool_input)
+                #     if tool_output == "Meeting scheduled successfully":
+                #         return
                 else:
-                    tool_output = "Error: Action "+f"'{action}' is not a valid!"
+                    tool_output = "Error: Action "+f"'{action}' is not a valid action!"
 
                 print(f"------- tool_output ------- \n{tool_output}\n")
 
             elif 'Done:' in llm_output:
                 print(f"\n\n{llm_output}")
                 return
-            else:  
+            else: 
                 print(f"Error: wrong LLM response\n{llm_output}\n")
 
             prompt = prompt+"\nObservation: "+str(tool_output)+"\n"
