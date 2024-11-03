@@ -8,8 +8,8 @@ The **Personal AI Assistant** is a local application designed to streamline your
 
 - **Email Management**: Automatically drafts and sends emails on your behalf, saving you time and effort.
 - **PDF Analysis**: Reads multiple PDF files and provides answers to your questions based on the content.
-- **Meeting Scheduling**: Efficiently schedules meetings according to your availability and preferences.
-- **Internet Search**: Searches the web to find information you need quickly and accurately.
+- **Meeting Scheduling**: Efficiently schedules meetings according to your availability and preferences. It can either schdule the meeting at your desired time or can recommend you time as per your calendar on that day.
+- **Internet Search**: Searches the web to find information you need quickly and accurately. It will give yopu top 10 search results with links and snippets and will also create a summary for you so you need not visit the links necessarily.
 - **Interactive Querying**: Asks you clarifying questions when uncertain or when it requires personal information.
 
 ## Privacy Assurance
@@ -32,20 +32,32 @@ To ensure the security of your private information, the Personal AI Assistant ru
 
 1. **Requirements**:
    - Python 3.x
-   - Necessary libraries (e.g., `requests`, `pdfplumber`, `smtplib`, etc.)
+   - Necessary libraries (e.g., `requests`, `pdfplumber`, `smtplib`, etc.). Install all from requirements.txt
    
 2. **Installation**:
    - Clone the repository:  
      ```bash
-     git clone https://github.com/yourusername/personal-ai-assistant.git
-     cd personal-ai-assistant
+     git clone https://github.com/nehayj100/Vedanta-My-Personal-Assistant
+     cd Vedanta-My-Personal-Assistant
      ```
    - Install required libraries:  
      ```bash
      pip install -r requirements.txt
      ```
+3. **Get the following APIs**:
+   - Get credentials.json file from your google calendar API and paste it in the
+     confidential folder.
+   -  Get your google application password and paste it in confidential/email_pass.txt
+   - Get your google custom search api and paste it in confidential/search_api.txt
+   - Get your google custom search cx and paste it in confidential/search_cx.txt
+   - Create a database of your contacts and paste it in confidential/email_pass.txt. The
+     format should be like:
+      NAME EMAIL
+      abc: vedantjoshi370@gmail.com
+      Neha Joshi: nehayj100@gmail.com
+   - Add all the pdf files you need to answer your questions in paper folder.
 
-3. **Run the Application**:
+4. **Run the Application**:
    - Start the assistant:  
      ```bash
      python pipeline.py
