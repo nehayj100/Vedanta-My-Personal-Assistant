@@ -81,7 +81,7 @@ with open(email_db_path, 'r') as file:
     email_database = file.read()  # Read the entire content of the file 
 
 EMAIL_DB = email_database
-# print(EMAIL_DB)
+#print(EMAIL_DB)
 
 def find_email(query: str) -> str:
     s = "The following lists names and email addresses of my contacts:\n"+EMAIL_DB+"\n Please return email of "+query
@@ -95,9 +95,9 @@ def send_email_internal(to_addr: str, subject: str, body: str) -> str:
     # SMTP server configuration
     smtp_server = "smtp.gmail.com"  # This might need to be updated
     smtp_port = 587  # or 465 for SSL or 587
-    username = "nehayjoshi98@gmail.com"
+    username = "testtestertamu@gmail.com"
     password = f"{passkey}"
-    from_addr = "nehayjoshi98@gmail.com"
+    from_addr = "testtestertamu@gmail.com"
 
     cc_addr = "xxx"
 
@@ -195,12 +195,12 @@ def split_text(documents: list[Document]):
     )
     # Split documents into smaller chunks using text splitter
     chunks = text_splitter.split_documents(documents)
-    print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+    # print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
     # Print example of page content and metadata for a chunk
     document = chunks[10]
-    print(document.page_content)
-    print(document.metadata)
+    # print(document.page_content)
+    # print(document.metadata)
 
     return chunks  # Return the list of split text chunks
 
@@ -232,7 +232,7 @@ def perform_RAG(prompt):
         # store each document in a vector embedding database
         for i, chunk in enumerate(chunks):
             d = chunk.page_content
-            print(f"Chunk {i}: {d}")
+            # print(f"Chunk {i}: {d}")
             response = ollama.embeddings(model="llama3.2", prompt=d)
             embedding = response["embedding"]
             # print(f"embedding: {embedding}")
@@ -302,11 +302,11 @@ def extract_meeting_details() -> str:
         summary = input("What is the meeting for?    ")
         description = input("Describe the meeting agenda:    ")
         attendee = input("Who is invited? give me the attendee's email:    ")
-        start_date = input("Tell me Date of the meeting? Format should be yyyy-m-dd:    ")
+        start_date = input("Tell me Date of the meeting? Format should be yyyy-mm-dd:    ")
         # start_date = convert_date(start_date)
         minutes_in_meeting = input("how many minutes should the meeting last?")
         slot_approval = input("Do you want me to suggest a start time as per your calendar ?")
-        if slot_approval.lower() == 'yes' or approval.lower() == 'y':
+        if slot_approval.lower() == 'yes' or slot_approval.lower() == 'y':
             start_time = get_available_meeting_slots(start_date, minutes_in_meeting)
             print(f"""Okay, I have {start_time} as the free slot for you.""")
         else:
@@ -402,7 +402,9 @@ def get_available_meeting_slots(meeting_date, minz):
             return
         
         # tell the LLM to give us available slots 
-        prompt = f"""Based on the following free time slots:\n{events}\nPlease suggest the best time slot for a meeting of {minz} minutes on {meeting_date}.
+        prompt = f"""Following are unavailable time slots:\n{events}\n
+                    Please suggest the best time slot for a meeting of {minz} minutes on {meeting_date}.
+                    You time slot should not conflict with the unavailable time slots.
                     Return only one time slot in hh:mm:ss (hh should be between 8 and 18, mm and ss should be 00) format and no other text."""
 
         slots = invoke_llm(prompt)
@@ -438,7 +440,7 @@ def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary,
 
         # Call the Calendar API
         now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-        print("Getting the upcoming 10 events")
+        #print("Getting the upcoming 10 events")
         events_result = (
             service.events()
             .list(
@@ -464,7 +466,7 @@ def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary,
     except HttpError as error:
         print(f"An error occurred: {error}")   
     
-    print("creating event!!")
+    #print("creating event!!")
 
     event = {
         'summary': summary,
@@ -493,9 +495,9 @@ def schedule_meeting_internal(start_date_time, end_date_time, attendee, summary,
             ],
         },
         }
-    print("pt1 ", event)
+    # print("pt1 ", event)
     event = service.events().insert(calendarId='primary', body=event).execute()
-    print("pt2 ", event)
+    # print("pt2 ", event)
     print('Event created: %s' % (event.get('htmlLink')))
 
     output = "Meeting scheduled successfully"
