@@ -16,6 +16,13 @@ The **Personal AI Assistant** is a local application designed to streamline your
 
 To ensure the security of your private information, the Personal AI Assistant runs entirely on a local model (Llama 3.2 1B). This setup eliminates the risk of data leakage that comes with cloud-based solutions.
 
+## Demo
+
+
+https://github.com/user-attachments/assets/d7fdd171-3021-451e-8a92-8336d295dc72
+
+
+
 ## Methodology
 
 ### Local LLM Implementation
