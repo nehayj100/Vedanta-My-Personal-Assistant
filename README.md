@@ -45,6 +45,7 @@ To ensure the security of your private information, the Personal AI Assistant ru
      pip install -r requirements.txt
      ```
 3. **Get the following APIs**:
+   - Create a folder confidential
    - Get credentials.json file from your google calendar API and paste it in the
      confidential folder.
    -  Get your google application password and paste it in confidential/email_pass.txt
